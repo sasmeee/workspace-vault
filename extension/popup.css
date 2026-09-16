@@ -1,0 +1,105 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 320px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #1e1e1e;
+  color: #e8eaed;
+}
+
+.app {
+  padding: 14px 16px 18px;
+}
+
+h1 {
+  font-size: 15px;
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9aa0a6;
+  margin: 14px 0 6px;
+}
+
+section:first-of-type h2 {
+  margin-top: 0;
+}
+
+.group-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  background: #2a2a2a;
+  margin-bottom: 6px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+button {
+  font-size: 12px;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background: #3d3d3d;
+  color: #e8eaed;
+}
+
+button:hover {
+  background: #4a4a4a;
+}
+
+.save-btn {
+  background: #1a73e8;
+  color: white;
+}
+.save-btn:hover {
+  background: #1765cc;
+}
+
+.restore-btn {
+  background: #188038;
+  color: white;
+}
+.restore-btn:hover {
+  background: #146c2e;
+}
+
+.delete-btn {
+  background: transparent;
+  color: #9aa0a6;
+  padding: 5px 8px;
+}
+.delete-btn:hover {
+  color: #f28b82;
+  background: transparent;
+}
+
+.empty {
+  font-size: 12px;
+  color: #9aa0a6;
+  padding: 4px 2px;
+  margin: 0;
+}

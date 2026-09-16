@@ -1,0 +1,16 @@
+{
+    "manifest_version": 3,
+    "name": "Workspace Vault",
+    "version": "0.1.0",
+    "description": "Save and restore your browser tab groups as reusable workspaces.",
+    "permissions": [
+        "tabGroups",
+        "tabs",
+        "bookmarks",
+        "storage"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Workspace Vault"
+    }
+}
