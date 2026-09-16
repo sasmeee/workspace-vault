@@ -1,6 +1,6 @@
 # Workspace Vault
 
-<p align="center"> <img src="/extension/icons/logo.png" alt="Workspace Vault logo" width="150" /> </p>
+<p align="center"> <img src="/assets/logo.png" alt="Workspace Vault logo" width="120" /> </p>
 
 A browser extension that helps you save and restore browser tab groups as reusable workspaces.
 
