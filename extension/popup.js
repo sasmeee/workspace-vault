@@ -15,6 +15,7 @@ const COLOR_HEX = {
 
 async function getCurrentWindowId() {
   const win = await chrome.windows.getCurrent();
+
   return win.id;
 }
 
@@ -45,17 +46,27 @@ async function getRootFolder() {
   return root;
 }
 
-async function saveGroup(group) {
+function getSavableTabs(tabs) {
+  return tabs.filter(
+    (tab) =>
+      tab.url &&
+      !tab.url.startsWith("chrome://") &&
+      !tab.url.startsWith("edge://"),
+  );
+}
+
+async function getGroupTabs(groupId) {
   const tabs = await chrome.tabs.query({
-    groupId: group.id,
+    groupId,
   });
 
-  const savable = tabs.filter(
-    (t) =>
-      t.url && !t.url.startsWith("chrome://") && !t.url.startsWith("edge://"),
-  );
+  return getSavableTabs(tabs);
+}
 
-  if (savable.length === 0) {
+async function saveGroup(group) {
+  const tabs = await getGroupTabs(group.id);
+
+  if (tabs.length === 0) {
     return null;
   }
 
@@ -66,7 +77,7 @@ async function saveGroup(group) {
     title: group.title || "Untitled Tab Group",
   });
 
-  for (const tab of savable) {
+  for (const tab of tabs) {
     await chrome.bookmarks.create({
       parentId: folder.id,
       title: tab.title || tab.url,
@@ -77,16 +88,60 @@ async function saveGroup(group) {
   await chrome.storage.local.set({
     ["meta_" + folder.id]: {
       color: group.color,
+      groupId: group.id,
+      windowId: group.windowId,
     },
   });
 
   return folder;
 }
 
+async function syncGroup(group, folder) {
+  const tabs = await getGroupTabs(group.id);
+
+  if (tabs.length === 0) {
+    return false;
+  }
+
+  // Remove existing bookmarks inside the saved folder.
+  const children = await chrome.bookmarks.getChildren(folder.id);
+
+  for (const child of children) {
+    if (child.url) {
+      await chrome.bookmarks.remove(child.id);
+    }
+  }
+
+  // Add the current tabs.
+  for (const tab of tabs) {
+    await chrome.bookmarks.create({
+      parentId: folder.id,
+      title: tab.title || tab.url,
+      url: tab.url,
+    });
+  }
+
+  // Update saved folder name.
+  await chrome.bookmarks.update(folder.id, {
+    title: group.title || "Untitled Tab Group",
+  });
+
+  // Update metadata.
+  await chrome.storage.local.set({
+    ["meta_" + folder.id]: {
+      color: group.color,
+      groupId: group.id,
+      windowId: group.windowId,
+    },
+  });
+
+  return true;
+}
+
 async function restoreGroup(folder) {
   const children = await chrome.bookmarks.getChildren(folder.id);
 
-  const urls = children.filter((c) => c.url).map((c) => c.url);
+  const urls = children.filter((child) => child.url).map((child) => child.url);
 
   if (urls.length === 0) {
     return;
@@ -131,6 +186,28 @@ async function deleteGroup(folder) {
   await chrome.storage.local.remove("meta_" + folder.id);
 }
 
+async function getSavedFolderForGroup(groupId) {
+  const root = await getRootFolder();
+
+  const folders = await chrome.bookmarks.getChildren(root.id);
+
+  for (const folder of folders) {
+    if (folder.url) {
+      continue;
+    }
+
+    const stored = await chrome.storage.local.get("meta_" + folder.id);
+
+    const metadata = stored["meta_" + folder.id];
+
+    if (metadata?.groupId === groupId) {
+      return folder;
+    }
+  }
+
+  return null;
+}
+
 async function renderCurrentGroups() {
   const windowId = await getCurrentWindowId();
 
@@ -149,45 +226,67 @@ async function renderCurrentGroups() {
   }
 
   for (const group of groups) {
+    const savedFolder = await getSavedFolderForGroup(group.id);
+
     const row = document.createElement("div");
 
     row.className = "group-row";
 
     row.innerHTML = `
-      <span class="dot"
-        style="background:${COLOR_HEX[group.color] || "#5f6368"}">
-      </span>
+      <span
+        class="dot"
+        style="background:${COLOR_HEX[group.color] || "#5f6368"}"
+      ></span>
 
       <span class="title">
         ${escapeHtml(group.title || "Untitled")}
       </span>
 
-      <button class="save-btn"
-        data-id="${group.id}">
-        Save
-      </button>
+      ${
+        savedFolder
+          ? `
+            <button
+              class="sync-btn"
+              data-id="${group.id}"
+            >
+              Sync
+            </button>
+          `
+          : `
+            <button
+              class="save-btn"
+              data-id="${group.id}"
+            >
+              Save
+            </button>
+          `
+      }
     `;
 
     container.appendChild(row);
-  }
 
-  container.querySelectorAll(".save-btn").forEach((button) => {
-    button.addEventListener("click", async (e) => {
-      const id = parseInt(e.target.dataset.id, 10);
+    const button = row.querySelector("button");
 
-      const group = groups.find((g) => g.id === id);
+    button.addEventListener("click", async () => {
+      button.disabled = true;
 
-      e.target.disabled = true;
+      if (savedFolder) {
+        button.textContent = "Syncing...";
 
-      e.target.textContent = "Saving...";
+        const success = await syncGroup(group, savedFolder);
 
-      const folder = await saveGroup(group);
+        button.textContent = success ? "Synced ✓" : "Empty";
+      } else {
+        button.textContent = "Saving...";
 
-      e.target.textContent = folder ? "Saved ✓" : "Empty";
+        const folder = await saveGroup(group);
+
+        button.textContent = folder ? "Saved ✓" : "Empty";
+      }
 
       await renderSavedGroups();
     });
-  });
+  }
 }
 
 async function renderSavedGroups() {
@@ -232,6 +331,7 @@ async function renderSavedGroups() {
       await deleteGroup(folder);
 
       await renderSavedGroups();
+      await renderCurrentGroups();
     });
 
     container.appendChild(row);
@@ -248,6 +348,5 @@ function escapeHtml(str) {
 
 document.addEventListener("DOMContentLoaded", () => {
   renderCurrentGroups();
-
   renderSavedGroups();
 });
