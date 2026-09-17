@@ -2,12 +2,37 @@
   box-sizing: border-box;
 }
 
+:root {
+  --bg: #ffffff;
+  --fg: #202124;
+  --sub: #5f6368;
+  --row-bg: #f1f3f4;
+  --row-hover: #e8eaed;
+  --btn-bg: #e8eaed;
+  --btn-hover: #dadce0;
+  --btn-disabled-opacity: 0.7;
+  --delete-fg: #5f6368;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e1e;
+    --fg: #e8eaed;
+    --sub: #9aa0a6;
+    --row-bg: #2a2a2a;
+    --row-hover: #333333;
+    --btn-bg: #3d3d3d;
+    --btn-hover: #4a4a4a;
+    --delete-fg: #9aa0a6;
+  }
+}
+
 body {
   margin: 0;
   width: 320px;
   font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: #1e1e1e;
-  color: #e8eaed;
+  background: var(--bg);
+  color: var(--fg);
 }
 
 .app {
@@ -24,7 +49,7 @@ h2 {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #9aa0a6;
+  color: var(--sub);
   margin: 14px 0 6px;
 }
 
@@ -38,7 +63,7 @@ section:first-of-type h2 {
   gap: 8px;
   padding: 7px 8px;
   border-radius: 6px;
-  background: #2a2a2a;
+  background: var(--row-bg);
   margin-bottom: 6px;
 }
 
@@ -63,16 +88,16 @@ button {
   border-radius: 5px;
   padding: 5px 10px;
   cursor: pointer;
-  background: #3d3d3d;
-  color: #e8eaed;
+  background: var(--btn-bg);
+  color: var(--fg);
 }
 
 button:hover {
-  background: #4a4a4a;
+  background: var(--btn-hover);
 }
 
 button:disabled {
-  opacity: 0.7;
+  opacity: var(--btn-disabled-opacity);
   cursor: default;
 }
 
@@ -105,7 +130,7 @@ button:disabled {
 
 .delete-btn {
   background: transparent;
-  color: #9aa0a6;
+  color: var(--delete-fg);
   padding: 5px 8px;
 }
 
@@ -116,7 +141,7 @@ button:disabled {
 
 .empty {
   font-size: 12px;
-  color: #9aa0a6;
+  color: var(--sub);
   padding: 4px 2px;
   margin: 0;
 }
